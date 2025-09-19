@@ -1,15 +1,24 @@
-# Search System Evolution 🚀
-**RDBMS → Redis → Elasticsearch**  
-**`“왜 Elasticsearch인가?”`라는 질문에 답하기 위해 진행한 실습/비교 프로젝트**
+# Search System Evolution 
+[![Java](https://img.shields.io/badge/Java-21-b07219.svg)](https://www.java.com)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6db33f.svg)](https://spring.io/projects/spring-boot)
+[![Gradle](https://img.shields.io/badge/Gradle-8.x-02303a.svg)](https://gradle.org)
+---
+
+**`RDBMS` → `Redis` → `Elasticsearch`**  
+**“왜 대규모 이커머스/대용량 트래픽 환경에서 `Elasticsearch`인가?”** 를 입증하기 위한 실습·비교 프로젝트
 
 ---
 
 ## 🎯 프로젝트 목적
-오늘날 이커머스 플랫폼(예: `쿠팡`, `아마존`)에서는 수천만 개의 상품 데이터가 존재합니다.  
-이 프로젝트는 단순히 기술을 배우는 것이 아니라,
+오늘날 대규모 이커머스 플랫폼(예: `쿠팡`, `아마존`)에서는 **수천만**~**수억** 개의 상품 데이터와  
+초당 수천 건 이상의 검색 요청이 동시에 발생합니다.
 
-**문제를 정의 → 기존 기술 적용 → 한계 파악 → 새로운 해법 적용**  
-이라는 과정을 통해 `“왜 Elasticsearch인가?”`를 실제로 입증하는 데 목적이 있습니다.
+이 프로젝트는 단순히 기술 학습이 아니라,
+
+**문제를 `정의` → `기존 기술 적용` → `한계 검증` → `새로운 해법 적용`**
+
+이라는 과정을 통해 **“왜 대규모 트래픽 환경에서 `Elasticsearch`가 선택되는가?”** 를  
+실험과 수치로 입증하는 데 목적이 있습니다.
 
 ---
 
@@ -55,7 +64,7 @@
 3. 동일한 **벤치마크 도구** 사용 (`wrk`, `redis-benchmark`, `JMeter`)
 4. 결과는 `benchmarks/`에 CSV/그래프로 정리
 
----
+--- 
 
 ## 📈 실험 결과 요약
 | 기술 | 평균 응답속도 | QPS | 장점 | 한계 |
@@ -87,6 +96,19 @@ search-system-evolution/
 └── README.md
 ```
 
+---
+
+## 📌 협업 및 브랜치 전략
+일반적인 팀 개발에서는 `git flow` 또는 `main/develop` 기반의 브랜치 전략을 사용합니다.  
+그러나 본 프로젝트는 **스터디 성격**을 가지고 있으며, 각 스터디원이 **서로 다른 패키지/디렉토리 내에서 독립적으로 작업**하기 때문에 충돌 발생 가능성이 거의 없습니다.
+
+따라서 본 프로젝트는 **단일 브랜치(main)** 전략을 채택했습니다.
+- 모든 작업은 `main` 브랜치에서 직접 진행합니다.
+- 패키지 단위로 코드가 분리되어 있어 충돌 가능성이 낮습니다.
+- 불필요한 브랜치 관리 오버헤드를 줄이고, 학습과 비교 실험에 집중할 수 있습니다.
+
+이 방식은 **실무용 협업 프로젝트**에는 적합하지 않을 수 있으나,  
+**연구/학습 목적의 실험 프로젝트**에서는 단순성과 효율성을 높여줍니다.
 
 ---
 
@@ -114,7 +136,6 @@ search-system-evolution/
    make load:redis
    make load:es
 
-# search-system-evolution
-# search-system-evolution
-# search-system-evolution
-# search-system-evolution
+
+
+
