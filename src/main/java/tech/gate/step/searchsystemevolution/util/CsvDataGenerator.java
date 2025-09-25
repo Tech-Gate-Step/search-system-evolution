@@ -26,7 +26,7 @@ public class CsvDataGenerator {
             writer.write("sku,name,description,brand,category_id,price,stock,rating,sales_count");
             writer.newLine();
 
-            int total = 1_000_000;
+            int total = 10_000_000;
             for (int i = 0; i < total; i++) {
                 String sku = "SKU" + String.format("%08d", i);
                 String brand = brands[random.nextInt(brands.length)];

@@ -1,14 +1,14 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   application:
     name: search-system-evolution
 
   datasource:
-    url: jdbc:mysql://localhost:3306/testdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+    url: jdbc:mysql://158.179.172.168:13306/testdb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: rootpass
+    password: techgate1234!
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   data:

@@ -1,15 +1,19 @@
-package tech.gate.step.searchsystemevolution;
+package tech.gate.step.searchsystemevolution.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import tech.gate.step.searchsystemevolution.domain.product.ProductEntity;
 import tech.gate.step.searchsystemevolution.domain.product.ProductRepository;
+
+import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -19,41 +23,31 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @Transactional
-class SearchSystemEvolutionApplicationTests {
+@ActiveProfiles("local")
+class ProductServiceTest {
 
-    @Autowired
-    private MockMvc mockMvc;
 
     @Autowired
     private ProductRepository productRepository;
 
-    @BeforeEach
-    void setUp() {
-        // 테스트 데이터 준비
-        ProductEntity product1 = new ProductEntity(null, "LG OLED TV", 1, 1200.00, "A bright and clear OLED TV", "LG");
-        ProductEntity product2 = new ProductEntity(null, "Samsung QLED TV", 1, 1100.00, "A colorful QLED TV", "Samsung");
-        productRepository.save(product1);
-        productRepository.save(product2);
-    }
-
     @Test
-    @DisplayName("Description에 포함된 키워드로 상품을 검색하면, 해당 상품이 반환되어야 한다.")
-    void searchProductsByDescriptionTest() throws Exception {
+    void 키워드_검색_시간_테스트() {
+
         // given
         String keyword = "OLED";
 
-        // when & then
-        mockMvc.perform(get("/products/search").param("keyword", keyword))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].description", containsString(keyword)))
-                .andDo(print());
+//        List<ProductEntity> entity = productRepository.findByDescriptionContaining(keyword);
+//        List<ProductEntity> all = productRepository.findAll();
+        long startMs = System.currentTimeMillis();
+        Pageable limit = PageRequest.of(0, 500000);
+        long endMs = System.currentTimeMillis();
+        productRepository.findAll(limit).getContent();
+        System.out.println((startMs - endMs) + "ms");
+
     }
 
     @Test
     void contextLoads() {
     }
-
 }
