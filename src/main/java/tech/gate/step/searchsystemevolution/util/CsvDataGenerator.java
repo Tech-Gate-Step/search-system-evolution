@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.util.Random;
 
 /**
- * products.csv 생성기 (1,000,000건)
+ * products.csv 생성기 (10,000,000건)
  * DB 테이블 products와 컬럼 순서 맞춤
  */
 public class CsvDataGenerator {
@@ -22,7 +22,7 @@ public class CsvDataGenerator {
 
             Random random = new Random();
 
-            // ✅ CSV 헤더 추가
+            // CSV 헤더 추가
             writer.write("sku,name,description,brand,category_id,price,stock,rating,sales_count");
             writer.newLine();
 
@@ -55,12 +55,9 @@ public class CsvDataGenerator {
                 writer.write(line);
                 writer.newLine();
 
-                if (i % 100_000 == 0) {
-                    System.out.println("✅ " + i + " rows generated...");
-                }
             }
 
-            System.out.println("🎉 CSV 파일 생성 완료: " + file);
+            System.out.println("CSV 파일 생성 완료: " + file);
         }
     }
 }
