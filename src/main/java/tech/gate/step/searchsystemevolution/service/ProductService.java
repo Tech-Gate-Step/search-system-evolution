@@ -9,9 +9,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import tech.gate.step.searchsystemevolution.domain.product.ProductEntity;
 import tech.gate.step.searchsystemevolution.domain.product.ProductRepository;
+import tech.gate.step.searchsystemevolution.service.dto.ProductPagePayload;
+import tech.gate.step.searchsystemevolution.service.dto.ProductSummary;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -24,58 +28,77 @@ public class ProductService {
     /**
      * Redis 캐시를 사용하는 검색
      */
-    @SuppressWarnings("unchecked")
-    public Page<ProductEntity> searchProductsWithCache(String brand, Integer categoryId, int page) {
-        // 1. 캐시 키 생성
-        String cacheKey = String.format("products:%s:%d:%d", brand, categoryId, page);
+    public Page<ProductSummary> searchProductsWithCache(String brand, Integer categoryId, int page, int size) {
+        String key = "products:%s:%d:%d:%d".formatted(brand, categoryId, page, size);
 
-        // 2. 캐시 확인
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
+        // 1. 캐시 조회
+        ProductPagePayload cached = (ProductPagePayload) redisTemplate.opsForValue().get(key);
         if (cached != null) {
-            log.info("캐시 HIT: {}", cacheKey);
-            // 캐시에선 List<ProductEntity> 꺼내서 PageImpl로 감싸줌
-            return new PageImpl<>((List<ProductEntity>) cached, PageRequest.of(page, 500_000),
-                    ((List<ProductEntity>) cached).size());
+            log.info("캐시 HIT: {}", key);
+            return new PageImpl<>(cached.items(), PageRequest.of(page, size), cached.totalCount());
         }
 
-        log.info("캐시 MISS: {} - DB 조회 시작", cacheKey);
+        log.info("캐시 MISS: {} - DB 조회", key);
 
-        // 3. DB 조회
-        Page<ProductEntity> result = productRepository.findByBrandAndCategoryId(
-                brand, categoryId, PageRequest.of(page, 500_000));
+        // 2. DB 조회
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<ProductEntity> p = productRepository.findByBrandAndCategoryId(brand, categoryId, pageable);
 
-        // 4. 캐시 저장 (Page 전체가 아니라 content만 저장)
-        redisTemplate.opsForValue().set(cacheKey, result.getContent(), Duration.ofMinutes(10));
-        log.info("캐시 저장 완료: {}", cacheKey);
+        List<ProductSummary> items = p.getContent().stream()
+                .map(e -> new ProductSummary(
+                        e.getId(),
+                        e.getSku(),
+                        e.getName(),
+                        e.getBrand(),
+                        e.getCategoryId(),
+                        e.getPrice()
+                ))
+                .toList();
 
-        return result;
+        ProductPagePayload payload = new ProductPagePayload(items, p.getTotalElements(), page, size);
+
+        // 3. 캐시에 저장 (TTL 10분)
+        redisTemplate.opsForValue().set(key, payload, Duration.ofMinutes(10));
+        log.info("캐시 저장 완료: {}", key);
+
+        return new PageImpl<>(items, pageable, p.getTotalElements());
     }
 
     /**
-     * 캐시 없이 DB만 사용하는 검색 (비교용)
+     * 비교용: 캐시 없이 DB 만
      */
-    public Page<ProductEntity> searchProductsNoCache(String brand, Integer categoryId, int page) {
-        return productRepository.findByBrandAndCategoryId(
-                brand, categoryId, PageRequest.of(page, 500_000));
+    public Page<ProductSummary> searchProductsNoCache(String brand, Integer categoryId, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<ProductEntity> p = productRepository.findByBrandAndCategoryId(brand, categoryId, pageable);
+
+        List<ProductSummary> items = p.getContent().stream()
+                .map(e -> new ProductSummary(
+                        e.getId(),
+                        e.getSku(),
+                        e.getName(),
+                        e.getBrand(),
+                        e.getCategoryId(),
+                        e.getPrice()
+                ))
+                .toList();
+
+        return new PageImpl<>(items, pageable, p.getTotalElements());
     }
 
     /**
-     * 특정 브랜드의 캐시 전체 삭제 (캐시 무효화)
+     * 무효화 (테스트/실험용)
      */
     public void clearCache(String brand) {
-        String pattern = "products:" + brand + ":*";
-        redisTemplate.keys(pattern).forEach(key -> {
-            redisTemplate.delete(key);
-            log.info("캐시 삭제: {}", key);
-        });
+        Set<String> keys = redisTemplate.keys("products:" + brand + ":*");
+        keys.forEach(redisTemplate::delete);
     }
 
     /**
      * 전체 캐시 삭제
      */
     public void clearAllCache() {
-        String pattern = "products:*";
-        redisTemplate.keys(pattern).forEach(redisTemplate::delete);
-        log.info("전체 캐시 삭제 완료");
+        var keys = redisTemplate.keys("products:*");
+        keys.forEach(redisTemplate::delete);
+
     }
 }
