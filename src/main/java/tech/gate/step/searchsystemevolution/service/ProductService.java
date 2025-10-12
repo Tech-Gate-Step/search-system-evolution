@@ -1,5 +1,7 @@
 package tech.gate.step.searchsystemevolution.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     /**
      * Redis 캐시를 사용하는 검색
@@ -69,7 +72,14 @@ public class ProductService {
      */
     public Page<ProductSummary> searchProductsNoCache(String brand, Integer categoryId, int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
-        Page<ProductEntity> p = productRepository.findByBrandAndCategoryId(brand, categoryId, pageable);
+//        Page<ProductEntity> p = productRepository.findByBrandAndCategoryId(brand, categoryId, pageable);
+//        Page<ProductEntity> p = productRepository.findAll(pageable);
+
+        List<ProductEntity> products = productRepository.findAllv2(pageable.getPageSize(), pageable.getOffset());
+        long count = productRepository.count();
+
+        PageImpl<ProductEntity> p = new PageImpl<>(products, pageable, count);
+
 
         List<ProductSummary> items = p.getContent().stream()
                 .map(e -> new ProductSummary(
@@ -83,6 +93,53 @@ public class ProductService {
                 .toList();
 
         return new PageImpl<>(items, pageable, p.getTotalElements());
+    }
+
+    /**
+     * 캐시 적용
+     */
+    public Page<ProductSummary> searchProductsCache(int page, int size) throws JsonProcessingException {
+
+        String key = "products:all:%d:%d".formatted(page, size);
+
+        // 1. 캐시 조회
+        String cached = (String) redisTemplate.opsForValue().get(key);
+        if (cached != null) {
+            log.info("캐시 HIT: {}", key);
+            return objectMapper.readValue(cached, objectMapper.getTypeFactory().constructParametricType(Page.class, ProductSummary.class));
+        }
+
+        log.info("캐시 MISS: {} - DB 조회", key);
+
+        // 2. DB 조회
+        PageRequest pageable = PageRequest.of(page, size);
+
+        List<ProductEntity> products = productRepository.findAllv2(pageable.getPageSize(), pageable.getOffset());
+        long count = productRepository.count();
+
+        PageImpl<ProductEntity> p = new PageImpl<>(products, pageable, count);
+
+
+        List<ProductSummary> items = p.getContent().stream()
+                .map(e -> new ProductSummary(
+                        e.getId(),
+                        e.getSku(),
+                        e.getName(),
+                        e.getBrand(),
+                        e.getCategoryId(),
+                        e.getPrice()
+                ))
+                .toList();
+        PageImpl<ProductSummary> productSummaries = new PageImpl<>(items, pageable, p.getTotalElements());
+
+        // 캐시에 저장 (TTL 60초)
+        try {
+            redisTemplate.opsForValue().set(key, objectMapper.writeValueAsString(productSummaries), Duration.ofSeconds(60));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return productSummaries;
     }
 
     /**

@@ -1,0 +1,8 @@
+### GET product 목록 조회 - DB 조회
+GET http://localhost:8080/api/v1/products/db
+Content-Type: application/json
+
+
+### GET product 목록 조회 - Redis 조회
+GET http://localhost:8080/api/v1/products/cache
+Content-Type: application/json
