@@ -1,0 +1,8 @@
+### POST 동기화
+POST http://localhost:8000/search/products/sync
+Content-Type: application/json
+
+
+### GET 상품 조회
+GET http://localhost:8080/search/products/list?keyword=샤오미&page=1&pageSize=20
+Content-Type: application/json
