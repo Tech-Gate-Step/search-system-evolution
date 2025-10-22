@@ -17,19 +17,20 @@ public class Product {
     private String sku;  // sku 코드
 
     @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = "nori"),
+            mainField = @Field(type = FieldType.Text, analyzer = "nori", copyTo = "all_text"),
             otherFields = {
                     @InnerField(suffix = "keyword", type = FieldType.Keyword),
-                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer")
+                    @InnerField(suffix = "ngram", type = FieldType.Text, analyzer = "ngram_analyzer"),
+                    @InnerField(suffix = "autocomplete", type = FieldType.Text, analyzer = "autocomplete_analyzer", searchAnalyzer = "autocomplete_search_analyzer")
             }
     )
     private String name; // 상품 명
 
-    @Field(type = FieldType.Text, analyzer = "nori")
+    @Field(type = FieldType.Text, analyzer = "nori", copyTo = "all_text")
     private String description;
 
     // 브랜드 명
-    @Field(type = FieldType.Keyword)
+    @Field(type = FieldType.Keyword, copyTo = "all_text")
     private String brand;
 
     // 카테고리 ID

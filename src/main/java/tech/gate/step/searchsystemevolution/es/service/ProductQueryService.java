@@ -40,7 +40,7 @@ public class ProductQueryService {
                     .query(keyword)
                     .fields("name^3", "description^1", "brand^2")  // 가중치
                     .fuzziness("AUTO")  // 오타 허용
-                    .operator(Operator.And)
+                    .operator(Operator.Or)
             );
             mustQueries.add(Query.of(q -> q.multiMatch(multiMatch)));
         }
@@ -56,6 +56,7 @@ public class ProductQueryService {
 
         // 올바른 방법 1: 람다 체이닝
         if (minPrice != null || maxPrice != null) {
+
             RangeQuery priceQuery = new RangeQuery.Builder()
                     .number(p -> {
                         p.field("price");

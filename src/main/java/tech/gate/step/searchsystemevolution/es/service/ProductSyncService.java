@@ -2,6 +2,7 @@ package tech.gate.step.searchsystemevolution.es.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tech.gate.step.searchsystemevolution.domain.product.ProductEntity;
 import tech.gate.step.searchsystemevolution.domain.product.ProductRepository;
 import tech.gate.step.searchsystemevolution.es.domain.Product;
+import tech.gate.step.searchsystemevolution.es.event.ProductCreatedEvent;
 import tech.gate.step.searchsystemevolution.es.repository.ProductElasticRepository;
 
 import java.util.List;
@@ -21,6 +23,19 @@ public class ProductSyncService {
 
     private final ProductRepository productRepository;  // MariaDB
     private final ProductElasticRepository elasticRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+
+    @Transactional
+    public ProductEntity saveProduct(ProductEntity productEntity) {
+
+        ProductEntity save = productRepository.save(productEntity);
+
+        applicationEventPublisher.publishEvent(new ProductCreatedEvent(save.getId()));
+
+
+        return save;
+    }
 
     /**
      * MariaDB의 모든 상품을 Elasticsearch로 동기화
