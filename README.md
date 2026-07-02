@@ -19,7 +19,7 @@
 
 이라는 과정을 통해 **“왜 대규모 트래픽 환경에서 `Elasticsearch`가 선택되는가?”** 를  
 실험과 수치로 입증하는 데 목적이 있습니다.
-
+(노셩링크)[https://app.notion.com/p/TechGate-273e5ca1e29680808bafca153a7904f7?source=copy_link]
 ---
 
 ## 🧩 문제 정의
